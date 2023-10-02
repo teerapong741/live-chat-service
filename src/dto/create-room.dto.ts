@@ -1,10 +1,7 @@
-import { RoomWithOffer } from 'src/models/room-with-offer.model';
 
 export interface CreateRoomDto {
-  userId: string,
-  roomWithOffer: RoomWithOffer;
+  roomName: string;
+  price: number;
+  imageRoomUrl: string;
+  streamers: string[];
 }
-
-// export interface CreateRoomResponse {
-
-// }

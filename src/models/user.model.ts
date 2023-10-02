@@ -1,4 +1,6 @@
 import { TLiveStatus } from 'src/types/live-status.type';
+import { RoleType } from 'src/types/role.type';
+import { Wallet } from './wallet.model';
 
 export interface User {
   id: string;
@@ -10,4 +12,6 @@ export interface User {
   price: number;
   status: TLiveStatus;
   createdAt: Date;
+  role: RoleType;
+  wallet: Wallet;
 }

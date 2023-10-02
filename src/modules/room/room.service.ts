@@ -2,8 +2,9 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { BehaviorSubject } from 'rxjs';
 import { CheckIsOwnerRoomDto } from 'src/dto/check-is-owner-room.dto';
 import { CreateRoomDto } from 'src/dto/create-room.dto';
-import { GetMessagesDto, GetMessagesResponse } from 'src/dto/get-messages.dto';
 import { JoinRoomDto } from 'src/dto/join-room.dto';
+import { LeaveRoomDto } from 'src/dto/leave-room.dto';
+import { RemoveRoomDto } from 'src/dto/remove-room.dto';
 import { ResponseDto } from 'src/dto/response.dto';
 import { SendMessageDto, SendMessageResponse } from 'src/dto/send-messages.dto';
 import { USERS } from 'src/mocks/users.db';
@@ -24,7 +25,9 @@ export class RoomService {
 
   checkIsOwnerRoom(payload: CheckIsOwnerRoomDto) {
     const rooms = this.rooms$.value;
-    const findRoom = rooms.find((item) => item.userId === payload.userId);
+    const findRoom = rooms.find((item) =>
+      item.streamers.map((item) => item.id).includes(payload.userId),
+    );
 
     return {
       status: HttpStatus.OK,
@@ -33,25 +36,21 @@ export class RoomService {
   }
 
   createRoom(payload: CreateRoomDto) {
-    const findUser = USERS.find((item) => item.id === payload.userId);
-    if (!findUser) {
-      throw new HttpException('Found an error!', HttpStatus.NOT_FOUND);
-    }
-
-    if (this.rooms$.value.find((item) => item.userId === payload.userId)) {
-      this.rooms$.next([
-        ...this.rooms$.value.filter((item) => item.userId !== payload.userId),
-      ]);
+    let key = uuidv4();
+    const rooms = this.rooms$.value;
+    while (rooms.find(item => item.key === key)) {
+      key = uuidv4();
     }
 
     const newRoom: Room = {
       id: uuidv4(),
-      offer: payload.roomWithOffer,
-      userId: payload.userId,
-      answers: [],
+      key: key,
       status: 'OFFLINE',
-      ownerData: { ...findUser },
-      messages: []
+      imageRoomUrl: payload.imageRoomUrl,
+      price: payload.price,
+      roomName: payload.roomName,
+      streamers: USERS.filter((item) => payload.streamers.includes(item.id)),
+      viewers: [],
     };
 
     this.rooms$.next([...this.rooms$.value, newRoom]);
@@ -63,46 +62,69 @@ export class RoomService {
     };
   }
 
-  joinRoom(payload: JoinRoomDto) {
-    const roomIndex = this.rooms$.value.findIndex(
-      (item) => item.id === payload.roomId,
-    );
-
-    if (roomIndex <= -1) {
-      throw new HttpException('Not found room!', HttpStatus.CONFLICT);
-    }
-
-    const rooms = this.rooms$.value;
-    const room = rooms[roomIndex];
-    room.answers = room.answers.filter(
-      (item) => item.userId !== payload.userId,
-    );
-    room.answers.push({ userId: payload.userId, answer: payload.answer });
-    this.rooms$.next(rooms);
-
-    this._roomGateway.joinRoom(room.userId, payload.answer);
+  removeRoom(payload: RemoveRoomDto): ResponseDto<null> {
+    this.rooms$.next([
+      ...this.rooms$.value.filter((item) => item.id !== payload.roomId),
+    ]);
 
     return {
       status: HttpStatus.OK,
-      data: {
-        roomId: room.id,
-      },
+      data: null,
     };
   }
 
-  getMessages(payload: GetMessagesDto): ResponseDto<GetMessagesResponse> {
-    const { roomId } = payload;
-    const rooms = this.rooms$.value;
-    const find = rooms.find((item) => item.id === roomId);
-    if (!find) {
+  joinRoom(payload: JoinRoomDto) {
+    const findRoomIndex = this.rooms$.value.findIndex(
+      (item) => item.id === payload.roomId,
+    );
+    if (findRoomIndex < 0) {
       throw new HttpException('Not found room!', HttpStatus.NOT_FOUND);
     }
-    const messages = find.messages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    const response: ResponseDto<GetMessagesResponse> = {
+    const findRoom = this.rooms$.value[findRoomIndex];
+
+    const isStreamer = payload.isStreamer;
+    if (isStreamer) {
+      const rooms = this.rooms$.value;
+      const room = rooms[findRoomIndex];
+      room.status = 'LIVE';
+      this._roomGateway.streamerJoinRoom(
+        payload.roomId,
+        findRoom.viewers.map((item) => item.id),
+      );
+    } else {
+      const findUser = USERS.find((user) => user.id === payload.userId);
+      if (!findUser) {
+        throw new HttpException('Not found user!', HttpStatus.NOT_FOUND);
+      }
+
+      const rooms = this.rooms$.value;
+      const room = rooms[findRoomIndex];
+      room.viewers.push(findUser);
+      this.rooms$.next(rooms);
+      this._roomGateway.viewerJoinRoom(payload.roomId, payload.userId);
+    }
+
+    return {
       status: HttpStatus.OK,
-      data: messages
+      data: null,
     };
-    return response;
+  }
+
+  leaveRoom(payload: LeaveRoomDto) {
+    const findRoomIndex = this.rooms$.value.findIndex(
+      (item) => item.id === payload.roomId,
+    );
+    if (findRoomIndex > -1) {
+      const rooms = this.rooms$.value;
+      const room = rooms[findRoomIndex];
+      room.viewers = room.viewers.filter((item) => item.id !== payload.userId);
+      this.rooms$.next(rooms);
+    }
+
+    return {
+      status: HttpStatus.OK,
+      data: null,
+    };
   }
 
   sendMessages(payload: SendMessageDto): ResponseDto<SendMessageResponse> {
@@ -120,11 +142,12 @@ export class RoomService {
       room_id: roomId,
       sender_id: senderId,
       type,
-    }
-    rooms[findIndex].messages.push(newMessage);
-    this.rooms$.next(rooms);
+    };
     this._roomGateway.newMessage(roomId, newMessage);
 
-    return null;
+    return {
+      status: HttpStatus.OK,
+      data: null,
+    };
   }
 }
