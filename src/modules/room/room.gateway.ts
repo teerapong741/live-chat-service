@@ -54,17 +54,40 @@ export class RoomGateway {
     });
   }
 
-  viewerJoinRoom(roomId: string, userId: string) {
+  viewerJoinRoom(roomId: string, userId: string, viewersLength: number) {
     this.server.emit(`room@${roomId}`, {
       type: SocketMessageType.VIEWER_JOIN_ROOM,
       data: {
         roomId,
         userId,
+        viewersLength
       },
     });
     this.requestOffer(roomId, userId);
   }
 
+  viewerLeaveRoom(roomId: string, userId: string, viewersLength: number) {
+    this.server.emit(`room@${roomId}`, {
+      type: SocketMessageType.VIEWER_LEAVE_ROOM,
+      data: {
+        roomId,
+        userId,
+        viewersLength
+      },
+    });
+    this.requestOffer(roomId, userId);
+  }
+
+  stopStream(roomId: string) {
+    this.server.emit(`room@${roomId}`, {
+      type: SocketMessageType.STOP_STREAM,
+      data: {
+        roomId
+      },
+    });
+  }
+
+  
   newMessage(roomId: string, data: MessageDto) {
     this.server.emit(`room@${roomId}`, {
       type: SocketMessageType.NEW_MESSAGE,

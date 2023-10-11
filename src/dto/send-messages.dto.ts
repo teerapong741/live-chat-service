@@ -5,6 +5,8 @@ export interface SendMessageDto {
   type: MessageType;
   message: string,
   senderId: string,
+  receiveId?: string,
+  giftCount: number,
 }
 
 export type SendMessageResponse = null;

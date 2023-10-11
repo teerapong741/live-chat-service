@@ -54,7 +54,7 @@ export class AuthService {
       imageUrl: null,
       name: username,
       age: 0,
-      price: 0,
+      price: 500,
       status: 'LIVE',
       role: RoleType.VIEWER,
       wallet: {

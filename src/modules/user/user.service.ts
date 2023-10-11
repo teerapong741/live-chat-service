@@ -15,4 +15,14 @@ export class UserService {
       status: HttpStatus.OK
     }
   }
+
+  buyCoin(userId: string): ResponseDto<number> {
+    const index = USERS.findIndex(item => item.id === userId);
+    USERS[index].price += 100;
+    
+    return {
+      data: USERS[index].price,
+      status: HttpStatus.OK
+    }
+  }
 }

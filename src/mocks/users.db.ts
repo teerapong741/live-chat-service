@@ -84,4 +84,68 @@ export const USERS: User[] = [
     },
     createdAt: moment().toDate(),
   },
+  {
+    id: uuidv4(),
+    username: 'stream_5',
+    imageUrl:
+      'https://thethaiger.com/th/wp-content/uploads/2022/07/289106030_154221420513903_2487995507056417488_n.jpg',
+    name: 'BOY THE VEER',
+    age: 26,
+    price: 30,
+    status: 'LIVE',
+    role: RoleType.STREAMER,
+    wallet: {
+      id: uuidv4(),
+      wallet: 0,
+    },
+    createdAt: moment().toDate(),
+  },
+  {
+    id: uuidv4(),
+    username: 'stream_6',
+    imageUrl:
+      'https://img.soccersuck.com/images/2022/08/12/Onlyfans-Deerlong.png',
+    name: 'Deer long',
+    age: 27,
+    price: 15,
+    status: 'LIVE',
+    role: RoleType.STREAMER,
+    wallet: {
+      id: uuidv4(),
+      wallet: 0,
+    },
+    createdAt: moment().toDate(),
+  },
+  {
+    id: uuidv4(),
+    username: 'stream_7',
+    imageUrl:
+      'https://img.soccersuck.com/images/2022/08/12/Onlyfans-BewSasiparpha.png',
+    name: 'Bew Sasiparpha',
+    age: 28,
+    price: 10,
+    status: 'LIVE',
+    role: RoleType.STREAMER,
+    wallet: {
+      id: uuidv4(),
+      wallet: 0,
+    },
+    createdAt: moment().toDate(),
+  },
+  {
+    id: uuidv4(),
+    username: 'stream_8',
+    imageUrl:
+      'https://img.soccersuck.com/images/2022/08/12/Onlyfans-Mewnii.png',
+    name: 'Mewnii',
+    age: 25,
+    price: 20,
+    status: 'LIVE',
+    role: RoleType.STREAMER,
+    wallet: {
+      id: uuidv4(),
+      wallet: 0,
+    },
+    createdAt: moment().toDate(),
+  },
 ];

@@ -6,6 +6,7 @@ import { LeaveRoomDto } from 'src/dto/leave-room.dto';
 import { RemoveRoomDto } from 'src/dto/remove-room.dto';
 import { ResponseDto } from 'src/dto/response.dto';
 import { SendMessageDto, SendMessageResponse } from 'src/dto/send-messages.dto';
+import { StopStreamDto } from 'src/dto/stop-stream.dto';
 import { RoomWithAnswer } from 'src/models/room-with-answer.model';
 import { RoomWithOffer } from 'src/models/room-with-offer.model';
 import { RoomGateway } from './room.gateway';
@@ -21,6 +22,11 @@ export class RoomController {
   @Get('room-list')
   roomList() {
     return this._roomSV.roomList();
+  }
+
+  @Post('room-by-id')
+  roomById(@Body('roomId') roomId: string) {
+    return this._roomSV.roomById(roomId);
   }
 
   @Post('check-is-owner-room')
@@ -80,5 +86,10 @@ export class RoomController {
       status: HttpStatus.OK,
       data: null,
     };
+  }
+
+  @Post('stop-stream')
+  stopStream(@Body('payload') payload: StopStreamDto) {
+    return this._roomSV.stopStream(payload);
   }
 }
